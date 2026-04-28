@@ -288,11 +288,7 @@
 </div>
 
 <script>
-  // ======================== CONFIGURAÇÃO DO WHATSAPP ========================
-  // ALTERE AQUI PARA O NÚMERO DO ESTAGIÁRIO (código país + DDD + número, apenas dígitos)
-  const NUMERO_ESTAGIARIO = "5519997267309";  // Exemplo Brasil: 55 19 999999999 → "5519999999999"
-
-  // ======================== LISTA DE TIPOS DE CHAMADO (10 itens) ========================
+  // ======================== LISTA DE TIPOS DE CHAMADO ========================
   const tiposChamado = [
     "Fechamento de Ordem de Corte",
     "Alteração Ocupação",
@@ -348,11 +344,9 @@
     if(loader) loader.remove();
   }
 
-  // validação campos obrigatórios: verifica se ao menos os principais com valor vazio
+  // validação campos obrigatórios
   function validateRequiredFields() {
     const allInputs = document.querySelectorAll('#formFieldsArea input, #formFieldsArea select, #formFieldsArea textarea');
-    const emptyFields = Array.from(allInputs).filter(field => field.value.trim() === "" && field.hasAttribute('required') === false);
-    // vamos deixar flexível: alerta apenas se os 3 primeiros campos de texto estiverem vazios? melhor alerta genérico mas não bloqueia totalmente.
     const criticalEmpty = Array.from(allInputs).filter(f => f.value.trim() === "" && f.type !== "button");
     if(criticalEmpty.length > 3) {
       if(!confirm("Atenção: vários campos estão vazios. Deseja enviar mesmo assim?")) return false;
@@ -440,7 +434,7 @@
       const inputEl = document.getElementById(key);
       if(inputEl) inputEl.value = value;
     }
-    showToast("Rascunho carregado automaticamente ✔️");
+    showToast("Rascunho carregado automaticamente");
     return true;
   }
 
@@ -467,25 +461,32 @@
     }
   }
 
-  // Montar mensagem WhatsApp a partir dos dados
+  // Montar mensagem WhatsApp a partir dos dados - SEM EMOJIS e SEM NUMERO FIXO
   function generateWhatsAppMessage() {
     const formData = collectFormData();
-    let msg = `🍃 *CHAMADO AGRÍCOLA: ${currentTicketType}*%0A%0A`;
+    let msg = "*CHAMADO AGRICOLA: " + currentTicketType + "*%0A%0A";
+    
     for(let [key, value] of Object.entries(formData)) {
       if(value && value.trim() !== "") {
-        let label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).replace(/Id/g, 'ID');
-        msg += `📌 *${label}:* ${value.trim()}%0A`;
+        let label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        label = label.replace(/([a-z])([A-Z])/g, '$1 $2');
+        msg += "> " + label + ": " + value.trim() + "%0A";
       }
     }
-    msg += `%0A📅 Enviado via Agro-Chamados - Gestão Agrícola`;
+    
+    msg += "%0A---%0A";
+    msg += "Enviado via Agro-Chamados - Gestao Agricola";
     return msg;
   }
 
+  // Função modificada: abre WhatsApp sem número específico (usuário escolhe o contato)
   function openWhatsApp() {
     const messageText = generateWhatsAppMessage();
-    const url = `https://wa.me/${NUMERO_ESTAGIARIO}?text=${messageText}`;
+    // Usando apenas whatsapp:// sem número específico
+    // Isso faz o WhatsApp abrir na tela de seleção de contato
+    const url = `https://wa.me/?text=${messageText}`;
     window.open(url, '_blank');
-    showToast("Redirecionando para o WhatsApp...");
+    showToast("Escolha o contato no WhatsApp...");
   }
 
   function handleSubmit() {
@@ -550,15 +551,15 @@
   // EVENTOS PRINCIPAIS
   document.getElementById('newChamadoBtn').addEventListener('click', goToTypeSelection);
   document.getElementById('infoAppBtn').addEventListener('click', () => {
-    showToast("Sistema AgroChamados - versão 2.0 · Envio direto WhatsApp");
-    alert("AgroChamados Profissional\nConfigure o número do estagiário no código (NUMERO_ESTAGIARIO).\nPara GitHub Pages: use apenas este arquivo.");
+    showToast("Sistema AgroChamados - versao 2.0 · Envio direto WhatsApp");
+    alert("AgroChamados Profissional\nAo clicar em enviar, o WhatsApp abrira e voce podera escolher para quem enviar a mensagem.");
   });
   document.getElementById('backHomeFromType').addEventListener('click', goToHome);
   document.getElementById('backToType').addEventListener('click', goToTypeSelection);
   submitBtn.addEventListener('click', handleSubmit);
   saveDraftBtn.addEventListener('click', saveCurrentDraft);
 
-  // Inicializa lista de tipos já no inicio para performance
+  // Inicializa lista de tipos
   renderTypeSelection();
 </script>
 </body>
